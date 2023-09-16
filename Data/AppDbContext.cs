@@ -11,5 +11,6 @@ namespace OnlineShopping.Data
         {
         }
         public DbSet<ApplicationUser> ApplicationUsers { get; set; }
+        public DbSet<Product> Products { get; set; }
     }
 }
