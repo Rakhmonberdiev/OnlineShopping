@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using Azure;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using OnlineShopping.Data;
 using OnlineShopping.Dtos.ProductDtos;
@@ -61,8 +62,8 @@ namespace OnlineShopping.Controllers
                         Description = productDto.Description,
                         Image = productDto.Image,
                     };
-                    db.Products.Add(product);
-                    db.SaveChanges();
+                    await db.Products.AddAsync(product);
+                    await db.SaveChangesAsync();
                     response.Result = product;
                     response.StatusCode = HttpStatusCode.Created;
                     return CreatedAtRoute("GetProductById", new { id = product.Id }, response);
@@ -79,6 +80,52 @@ namespace OnlineShopping.Controllers
                 response.IsSuccess = false;
                 response.ErrorMessages = new List<string>() { ex.ToString() };
 
+            }
+
+            return Ok(response);
+        }
+
+
+
+
+        [HttpPut]
+        public async Task<ActionResult<ApiResponse>> UpdateProduct(int id, [FromForm] ProductUpdateDto productUpdateDto)
+        {
+            try
+            {
+                if(ModelState.IsValid)
+                {
+                    if(productUpdateDto==null || id !=  productUpdateDto.Id)
+                    {
+                        response.StatusCode = HttpStatusCode.BadRequest;
+                        response.IsSuccess = false;
+                        return BadRequest();
+                    }
+                    Product product = await db.Products.FindAsync(id);
+                    if(product == null)
+                    {
+                        response.StatusCode = HttpStatusCode.BadRequest;
+                        response.IsSuccess = false;
+                        return BadRequest();
+                    }
+                    product.Name = productUpdateDto.Name;
+                    product.Description = productUpdateDto.Description;
+                    product.Category = productUpdateDto.Category;
+                    product.SpecialTag = productUpdateDto.SpecialTag;
+                    product.Price   = productUpdateDto.Price;
+                    product.Image = productUpdateDto.Image;
+
+                    db.Products.Update(product);
+                    await db.SaveChangesAsync();
+                    response.StatusCode = HttpStatusCode.NoContent;
+                    return Ok(response);
+                }
+               
+            }
+            catch (Exception ex)
+            {
+                response.IsSuccess = false;
+                response.ErrorMessages = new List<string>() { ex.ToString() };
             }
 
             return response;
