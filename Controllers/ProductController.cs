@@ -33,11 +33,13 @@ namespace OnlineShopping.Controllers
             if(id == 0)
             {
                 response.StatusCode = HttpStatusCode.BadRequest;
+                response.IsSuccess = false;
                 return BadRequest(response);
             }
             Product product = db.Products.FirstOrDefault(x => x.Id == id);
             if(product == null)
             {
+                response.IsSuccess = false;
                 response.StatusCode = HttpStatusCode.BadRequest;
                 return BadRequest(response);
             }
