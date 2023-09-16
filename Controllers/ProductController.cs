@@ -196,6 +196,15 @@ namespace OnlineShopping.Controllers
                     response.IsSuccess = false;
                     return BadRequest();
                 }
+                if(!string.IsNullOrEmpty(product.ImageLocalPath))
+                {
+                    var oldFilePath = Path.Combine(Directory.GetCurrentDirectory(), product.ImageLocalPath);
+                    FileInfo file = new FileInfo(oldFilePath);
+                    if (file.Exists)
+                    {
+                        file.Delete();
+                    }
+                }
                 db.Products.Remove(product);
                 await db.SaveChangesAsync();
                 return Ok(response);
