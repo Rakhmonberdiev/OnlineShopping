@@ -24,5 +24,24 @@ namespace OnlineShopping.Controllers
             response.StatusCode = HttpStatusCode.OK;
             return Ok(response);
         }
+
+        [HttpGet("{id:int}")]
+        public async Task<IActionResult> GetProductById(int id)
+        {
+            if(id == 0)
+            {
+                response.StatusCode = HttpStatusCode.BadRequest;
+                return BadRequest(response);
+            }
+            Product product = db.Products.FirstOrDefault(x => x.Id == id);
+            if(product == null)
+            {
+                response.StatusCode = HttpStatusCode.BadRequest;
+                return BadRequest(response);
+            }
+            response.Result = product;
+            response.StatusCode = HttpStatusCode.OK;
+            return Ok(response);
+        }
     }
 }
