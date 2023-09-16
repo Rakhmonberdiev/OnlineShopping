@@ -139,9 +139,31 @@ namespace OnlineShopping.Controllers
                     product.SpecialTag = productUpdateDto.SpecialTag;
                     product.Price   = productUpdateDto.Price;
                     product.Image = productUpdateDto.Image;
+                    if(productUpdateDto.ImgFile != null)
+                    {
+                        if(!string.IsNullOrEmpty(product.ImageLocalPath))
+                        {
+                            var oldFilePath = Path.Combine(Directory.GetCurrentDirectory(), product.ImageLocalPath);
+                            FileInfo file = new FileInfo(oldFilePath);
+                            if (file.Exists)
+                            {
+                                file.Delete();
+                            }
+                        }
+                        string fileName = product.Id + Path.GetExtension(productUpdateDto.ImgFile.FileName);
+                        string filePath = @"wwwroot\ProductImages\" + fileName;
+                        var directoryLocation = Path.Combine(Directory.GetCurrentDirectory(), filePath);
+                        using (var fileStream = new FileStream(directoryLocation, FileMode.Create))
+                        {
+                            productUpdateDto.ImgFile.CopyTo(fileStream);
+                        }
+                        var baseUrl = $"{HttpContext.Request.Scheme}://{HttpContext.Request.Host.Value}{HttpContext.Request.PathBase.Value}";
+                        product.Image = baseUrl + "/ProductImages/" + fileName;
+                        product.ImageLocalPath = filePath;
+                    }
 
                     db.Products.Update(product);
-                    await db.SaveChangesAsync();
+                    db.SaveChanges();
                     response.StatusCode = HttpStatusCode.NoContent;
                     return Ok(response);
                 }
