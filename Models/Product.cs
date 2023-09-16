@@ -14,5 +14,6 @@ namespace OnlineShopping.Models
         [Range(1, int.MaxValue)]
         public double Price { get; set; }
         public string Image { get; set; }
+        public string ImageLocalPath { get; set; }
     }
 }

@@ -12,5 +12,7 @@ namespace OnlineShopping.Dtos.ProductDtos
         [Range(1, int.MaxValue)]
         public double Price { get; set; }
         public string Image { get; set; }
+        public string ImageLocalPath { get; set; }
+        public IFormFile ImgFile { get; set; }
     }
 }

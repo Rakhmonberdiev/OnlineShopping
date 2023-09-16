@@ -64,6 +64,31 @@ namespace OnlineShopping.Controllers
                     };
                     await db.Products.AddAsync(product);
                     await db.SaveChangesAsync();
+                    if(productDto.ImgFile != null)
+                    {
+                        string fileName = product.Id + Path.GetExtension(productDto.ImgFile.FileName);
+                        string filePath = @"wwwroot\ProductImages\" + fileName;
+                        var directoryLocation = Path.Combine(Directory.GetCurrentDirectory(), filePath);
+                        FileInfo file = new FileInfo(directoryLocation);
+                        if (file.Exists)
+                        {
+                            file.Delete();
+                        }
+                        var filePathDirectory = Path.Combine(Directory.GetCurrentDirectory(), filePath);
+                        using (var fileStream = new FileStream(filePathDirectory, FileMode.Create))
+                        {
+                            productDto.ImgFile.CopyTo(fileStream);
+                        }
+                        var baseUrl = $"{HttpContext.Request.Scheme}://{HttpContext.Request.Host.Value}{HttpContext.Request.PathBase.Value}";
+                        product.Image = baseUrl + "/ProductImages/" + fileName;
+                        product.ImageLocalPath = filePath;
+                    }
+                    else
+                    {
+                        product.Image = "https://placehold.co/600x400";
+                    }
+                    db.Products.Update(product);
+                    db.SaveChanges();
                     response.Result = product;
                     response.StatusCode = HttpStatusCode.Created;
                     return CreatedAtRoute("GetProductById", new { id = product.Id }, response);
