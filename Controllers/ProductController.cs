@@ -88,7 +88,7 @@ namespace OnlineShopping.Controllers
 
 
 
-        [HttpPut]
+        [HttpPut("{id:int}")]
         public async Task<ActionResult<ApiResponse>> UpdateProduct(int id, [FromForm] ProductUpdateDto productUpdateDto)
         {
             try
@@ -130,5 +130,37 @@ namespace OnlineShopping.Controllers
 
             return response;
         }
+
+        [HttpDelete("{id:int}")]
+        public async Task<ActionResult<ApiResponse>> DeleteProduct(int id)
+        {
+            try
+            {
+                if(id == 0)
+                {
+                    response.StatusCode = HttpStatusCode.BadRequest;
+                    response.IsSuccess = false;
+                    return BadRequest();
+                }
+                Product product = await db.Products.FindAsync(id);
+                if(product == null)
+                {
+                    response.StatusCode = HttpStatusCode.BadRequest;
+                    response.IsSuccess = false;
+                    return BadRequest();
+                }
+                db.Products.Remove(product);
+                await db.SaveChangesAsync();
+                return Ok(response);
+            }
+            catch (Exception ex)
+            {
+
+                response.IsSuccess = false;
+                response.ErrorMessages = new List<string>() { ex.ToString() };
+            }
+            return response;
+        }
+
     }
 }
