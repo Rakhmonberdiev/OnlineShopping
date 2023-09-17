@@ -1,11 +1,16 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.IdentityModel.Tokens;
 using OnlineShopping.Data;
 using OnlineShopping.Dtos.Auth;
 using OnlineShopping.Models;
 using OnlineShopping.Utility;
+using System.Data;
+using System.IdentityModel.Tokens.Jwt;
 using System.Net;
+using System.Security.Claims;
+using System.Text;
 
 namespace OnlineShopping.Controllers
 {
@@ -40,11 +45,29 @@ namespace OnlineShopping.Controllers
                 response.ErrorMessages.Add("Имя пользователя или пароль неверны");
                 return BadRequest(response);
             }
+            var roles = await userManager.GetRolesAsync(user);
+            JwtSecurityTokenHandler tokenHandler = new();
+            byte[] key = Encoding.ASCII.GetBytes(secretKey);
+
+            SecurityTokenDescriptor tokenDescriptor = new()
+            {
+                Subject = new ClaimsIdentity(new Claim[]
+                {
+                    new Claim("Name", user.Name),
+                    new Claim("id", user.Id.ToString()),
+                    new Claim("UserName", user.UserName.ToString()),
+                    new Claim(ClaimTypes.Email, user.Email.ToString()),
+                    new Claim(ClaimTypes.Role, roles.FirstOrDefault()),
+                }),
+                Expires = DateTime.UtcNow.AddDays(7),
+                SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
+            };
+            SecurityToken token = tokenHandler.CreateToken(tokenDescriptor);
 
             LoginResponseDto loginResponse = new()
             {
                 Email = user.Email,
-                Token = ""
+                Token = tokenHandler.WriteToken(token) 
             };
             if(loginResponse.Email == null)
             {
