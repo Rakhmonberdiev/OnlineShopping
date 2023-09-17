@@ -27,8 +27,41 @@ namespace OnlineShopping.Controllers
             this.roleManager = roleManager;
         }
 
+        [HttpPost("login")]
+        public async Task<IActionResult> Login([FromBody] LoginRequestDto login)
+        {
+            ApplicationUser user = db.ApplicationUsers
+                .FirstOrDefault(u => u.UserName.ToLower() == login.UserName.ToLower());
+            bool isValid = await userManager.CheckPasswordAsync(user, login.Password);
+            if (isValid==false)
+            {
+                response.Result = new LoginResponseDto();
+                response.StatusCode = HttpStatusCode.BadRequest;
+                response.ErrorMessages.Add("Имя пользователя или пароль неверны");
+                return BadRequest(response);
+            }
 
-        [HttpPost]
+            LoginResponseDto loginResponse = new()
+            {
+                Email = user.Email,
+                Token = ""
+            };
+            if(loginResponse.Email == null)
+            {
+                response.StatusCode=HttpStatusCode.BadRequest;
+                response.IsSuccess = false;
+                response.ErrorMessages.Add("Имя пользователя или пароль неверны");
+                return BadRequest(response);
+            }
+            response.StatusCode = HttpStatusCode.OK;
+            response.IsSuccess=true;
+            response.Result = loginResponse;
+            return Ok(response);
+        }
+
+
+
+        [HttpPost("register")]
         public async Task<IActionResult> Register([FromBody] RegisterRequestDto requestDto)
         {
             ApplicationUser userFromDb = db.ApplicationUsers.FirstOrDefault(u=>u.UserName.ToLower()==requestDto.UserName.ToLower());
