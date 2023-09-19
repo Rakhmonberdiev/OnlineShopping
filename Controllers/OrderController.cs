@@ -3,7 +3,9 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using OnlineShopping.Data;
+using OnlineShopping.Dtos.Order;
 using OnlineShopping.Models;
+using OnlineShopping.Utility;
 using System.Net;
 
 namespace OnlineShopping.Controllers
@@ -67,6 +69,56 @@ namespace OnlineShopping.Controllers
                 _rs.Result = orderHeaders;
                 _rs.StatusCode = HttpStatusCode.OK;
                 return Ok(_rs);
+            }
+            catch (Exception ex)
+            {
+                _rs.IsSuccess = false;
+                _rs.ErrorMessages
+                     = new List<string>() { ex.ToString() };
+            }
+            return _rs;
+        }
+
+        [HttpPost] 
+        public async Task<ActionResult<ApiResponse>> CreateOrder([FromBody] OrderHeaderCreateDto orderHeaderDTO)
+        {
+            try
+            {
+                OrderHeader order = new()
+                {
+                    ApplicationUserId = orderHeaderDTO.ApplicationUserId,
+                    PickupEmail = orderHeaderDTO.PickupEmail,
+                    PickupName = orderHeaderDTO.PickupName,
+                    PickupPhoneNumber = orderHeaderDTO.PickupPhoneNumber,
+                    OrderTotal = orderHeaderDTO.OrderTotal,
+                    OrderDate = DateTime.Now,
+                    StripePaymentIntentID = orderHeaderDTO.StripePaymentIntentID,
+                    TotalItems = orderHeaderDTO.TotalItems,
+                    Status = String.IsNullOrEmpty(orderHeaderDTO.Status) ? SD.status_pending : orderHeaderDTO.Status,
+                };
+
+                if (ModelState.IsValid)
+                {
+                    _db.OrderHeaders.Add(order);
+                    _db.SaveChanges();
+                    foreach (var orderDetailDTO in orderHeaderDTO.OrderDetailsDto)
+                    {
+                        OrderDetails orderDetails = new()
+                        {
+                            OrderHeaderId = order.OrderHeaderId,
+                            ItemName = orderDetailDTO.ItemName,
+                            ProductId = orderDetailDTO.ProductId,
+                            Price = orderDetailDTO.Price,
+                            Quantity = orderDetailDTO.Quantity,
+                        };
+                        _db.OrderDetails.Add(orderDetails);
+                    }
+                    _db.SaveChanges();
+                    _rs.Result = order;
+                    order.OrderDetails = null;
+                    _rs.StatusCode = HttpStatusCode.Created;
+                    return Ok(_rs);
+                }
             }
             catch (Exception ex)
             {
