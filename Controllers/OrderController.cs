@@ -128,7 +128,59 @@ namespace OnlineShopping.Controllers
             }
             return _rs;
         }
+        [HttpPut("{id:int}")]
+        public async Task<ActionResult<ApiResponse>> UpdateOrder(int id, [FromBody] OrderHeaderUpdateDto orderHeaderUpdateDTO)
+        {
+            try
+            {
+                if(orderHeaderUpdateDTO== null || id != orderHeaderUpdateDTO.OrderHeaderId)
+                {
+                    _rs.IsSuccess = false;
+                    _rs.StatusCode = HttpStatusCode.BadRequest;
+                    return BadRequest();
+                }
+                OrderHeader orderFromDb = _db.OrderHeaders.FirstOrDefault(u => u.OrderHeaderId == id);
+                if(orderFromDb== null)
+                {
+                    _rs.IsSuccess = false;
+                    _rs.StatusCode = HttpStatusCode.BadRequest;
+                    return BadRequest();
+                }
+                if (!string.IsNullOrEmpty(orderHeaderUpdateDTO.PickupName))
+                {
+                    orderFromDb.PickupName = orderHeaderUpdateDTO.PickupName;
+                }
+                if (!string.IsNullOrEmpty(orderHeaderUpdateDTO.PickupPhoneNumber))
+                {
+                    orderFromDb.PickupPhoneNumber = orderHeaderUpdateDTO.PickupPhoneNumber;
+                }
 
+                if (!string.IsNullOrEmpty(orderHeaderUpdateDTO.PickupEmail))
+                {
+                    orderFromDb.PickupEmail = orderHeaderUpdateDTO.PickupEmail;
+                }
+
+                if (!string.IsNullOrEmpty(orderHeaderUpdateDTO.Status))
+                {
+                    orderFromDb.Status = orderHeaderUpdateDTO.Status;
+                }
+
+                if (!string.IsNullOrEmpty(orderHeaderUpdateDTO.StripePaymentIntentID))
+                {
+                    orderFromDb.StripePaymentIntentID = orderHeaderUpdateDTO.StripePaymentIntentID;
+                }
+                _db.SaveChanges();
+                _rs.IsSuccess = true;
+                _rs.StatusCode=HttpStatusCode.NoContent;
+                return Ok(_rs);
+            }
+            catch (Exception ex)
+            {
+                _rs.IsSuccess = false;
+                _rs.ErrorMessages = new List<string>() { ex.ToString() } ;
+            }
+            return _rs;
+        }
 
     }
 }
